@@ -30,16 +30,16 @@ export function GuestsScreen() {
           <tbody>
             {guests.map((g) => (
               <tr key={g.id} data-guest-row={g.id}>
-                <td><input aria-label="First name" key={g.firstName} defaultValue={g.firstName} onBlur={(e) => st.updateGuest(g.id, { firstName: e.target.value.trim() })} /></td>
-                <td><input aria-label="Last name" key={g.lastName} defaultValue={g.lastName} onBlur={(e) => st.updateGuest(g.id, { lastName: e.target.value.trim() })} /></td>
-                <td><select aria-label="Group" value={g.groupId ?? ''} onChange={(e) => st.updateGuest(g.id, { groupId: e.target.value || null })}>
+                <td data-label="First name"><input aria-label="First name" key={g.firstName} defaultValue={g.firstName} onBlur={(e) => st.updateGuest(g.id, { firstName: e.target.value.trim() })} /></td>
+                <td data-label="Last name"><input aria-label="Last name" key={g.lastName} defaultValue={g.lastName} onBlur={(e) => st.updateGuest(g.id, { lastName: e.target.value.trim() })} /></td>
+                <td data-label="Group"><select aria-label="Group" value={g.groupId ?? ''} onChange={(e) => st.updateGuest(g.id, { groupId: e.target.value || null })}>
                   <option value="">None</option>{project.groups.map((gr) => <option key={gr.id} value={gr.id}>{gr.name}</option>)}</select></td>
-                <td><input aria-label="Dietary" key={g.dietary} defaultValue={g.dietary} onBlur={(e) => st.updateGuest(g.id, { dietary: e.target.value.trim() })} /></td>
-                <td><input aria-label="Notes" key={g.notes} defaultValue={g.notes} onBlur={(e) => st.updateGuest(g.id, { notes: e.target.value.trim() })} /></td>
-                <td>{ev && <select aria-label="RSVP" value={g.status[ev.id] ?? 'not invited'} onChange={(e) => st.setGuestStatus(g.id, e.target.value as Status)}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select>}</td>
-                <td>{ev && <select aria-label="Override" value={ev.plan.overrides[g.id] ?? ''} onChange={(e) => st.setOverride(g.id, (e.target.value || null) as 'coming' | 'removed' | null)} title={`Effective: ${effectiveStatus(g, ev.plan, ev.id)}`}>
+                <td data-label="Dietary"><input aria-label="Dietary" key={g.dietary} defaultValue={g.dietary} onBlur={(e) => st.updateGuest(g.id, { dietary: e.target.value.trim() })} /></td>
+                <td data-label="Notes"><input aria-label="Notes" key={g.notes} defaultValue={g.notes} onBlur={(e) => st.updateGuest(g.id, { notes: e.target.value.trim() })} /></td>
+                <td data-label="RSVP">{ev && <select aria-label="RSVP" value={g.status[ev.id] ?? 'not invited'} onChange={(e) => st.setGuestStatus(g.id, e.target.value as Status)}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select>}</td>
+                <td data-label="Override">{ev && <select aria-label="Override" value={ev.plan.overrides[g.id] ?? ''} onChange={(e) => st.setOverride(g.id, (e.target.value || null) as 'coming' | 'removed' | null)} title={`Effective: ${effectiveStatus(g, ev.plan, ev.id)}`}>
                   <option value="">As RSVP</option><option value="coming">Treat as coming</option><option value="removed">Remove</option></select>}</td>
-                <td className="row" style={{ flexWrap: 'nowrap' }}>
+                <td className="row actions" style={{ flexWrap: 'nowrap' }}>
                   <button className="btn sm" title="Put this guest in their own party" onClick={() => { const pid = uid('party'); st.commit((d) => { d.parties.push({ id: pid, label: '', linked: true }); const x = d.guests.find((y) => y.id === g.id); if (x) x.partyId = pid; }); }}>Own party</button>
                   <button className="x" aria-label={`Delete ${g.firstName} ${g.lastName}`} onClick={() => st.deleteGuest(g.id)}>×</button>
                 </td>

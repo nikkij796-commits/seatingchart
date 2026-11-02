@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { chip, createEvent, fresh, importFixture, tableCard } from './helpers';
+import { chip, createEvent, nav, openMenu, fresh, importFixture, tableCard } from './helpers';
 
 test.beforeEach(async ({ page }) => { await fresh(page); });
 
 test('import a CSV with column mapping, RSVP mapping and duplicate names', async ({ page }) => {
   await createEvent(page, 'Reception', 'Default');
-  await page.getByRole('button', { name: 'Guests', exact: true }).click();
+  await nav(page, 'Guests');
   await page.locator('#importBtn').click();
   await page.locator('#importFile').setInputFiles('tests/fixtures/guests.csv');
   // columns were auto-detected, RSVP values mapped by meaning
@@ -21,7 +21,7 @@ test('import a CSV with column mapping, RSVP mapping and duplicate names', async
   await expect(page.locator('[data-guest-row]')).toHaveCount(7);
   await expect(page.locator('[data-guest-row] input[aria-label="First name"]').evaluateAll((els) => els.filter((e) => (e as HTMLInputElement).value === 'Cy').length)).resolves.toBe(2);
   // seating screen: declined never shown, pending hidden by default
-  await page.getByRole('button', { name: 'Seating', exact: true }).click();
+  await nav(page, 'Seating');
   await expect(page.locator('#poolTitle')).toHaveText('Unseated (4)');
   await expect(chip(page, 'Fay Ash')).toHaveCount(0);
   await expect(chip(page, 'Dee Pine')).toHaveCount(0);
@@ -86,7 +86,7 @@ test('event switching never changes another event plan', async ({ page }) => {
   await expect(tableCard(page, 1).locator('[data-guest]')).toHaveCount(0);
   await expect(page.locator('#poolTitle')).toHaveText('Unseated (3)');
   // duplicate an event: plan is copied, then independent
-  await page.getByRole('button', { name: 'Events', exact: true }).click();
+  await nav(page, 'Events');
   await page.locator('[data-event]').first().getByRole('button', { name: 'Duplicate plan' }).click();
   await expect(page.locator('[data-event]')).toHaveCount(3);
   await page.locator('[data-event]').filter({ has: page.locator('input[value$="(copy)"]') }).getByRole('button', { name: 'Open' }).click();
@@ -108,7 +108,7 @@ test('state survives a reload (autosave) and undo/redo work', async ({ page }) =
 });
 
 test('layout editor: upload a floor plan, add tables, use in an event', async ({ page }) => {
-  await page.getByRole('button', { name: 'Layouts', exact: true }).click();
+  await nav(page, 'Layouts');
   await page.getByRole('button', { name: 'New empty layout' }).click();
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#eee" stroke="#333"/></svg>';
   await page.locator('#bgFile').setInputFiles({ name: 'plan.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
@@ -127,7 +127,7 @@ test('layout editor: upload a floor plan, add tables, use in an event', async ({
   await expect(page.locator('.ed-slot')).toHaveCount(3);
   await page.getByLabel('Layout mode').selectOption('anchored');
   await page.getByRole('button', { name: '← Layouts' }).click();
-  await page.getByRole('button', { name: 'Events', exact: true }).click();
+  await nav(page, 'Events');
   await page.getByLabel('Event name').first().fill('Gala');
   await page.getByLabel('Room layout').selectOption({ label: 'My hall' });
   await page.getByRole('button', { name: 'Create event' }).click();
@@ -138,7 +138,7 @@ test('layout editor: upload a floor plan, add tables, use in an event', async ({
 
 test('table modal closes with button, Esc and outside click', async ({ page }) => {
   await createEvent(page, 'Reception', 'Default');
-  const open = async () => { await tableCard(page, 0).locator('.thead').dblclick({ position: { x: 5, y: 40 } }); await expect(page.locator('#modal')).toBeVisible(); };
+  const open = async () => { await tableCard(page, 0).locator('.thead').dblclick({ position: { x: 4, y: 4 } }); await expect(page.locator('#modal')).toBeVisible(); };
   await open(); await page.getByRole('button', { name: 'Exit' }).last().click(); await expect(page.locator('#modal')).toHaveCount(0);
   await open(); await page.keyboard.press('Escape'); await expect(page.locator('#modal')).toHaveCount(0);
   await open(); await page.locator('#modal').click({ position: { x: 3, y: 3 } }); await expect(page.locator('#modal')).toHaveCount(0);
@@ -146,7 +146,7 @@ test('table modal closes with button, Esc and outside click', async ({ page }) =
 
 test('anchored snapping, replacement to the tray, unplace by dragging @desktop', async ({ page }) => {
   // make the Default room anchored, then use it in an event
-  await page.getByRole('button', { name: 'Layouts', exact: true }).click();
+  await nav(page, 'Layouts');
   await page.locator('[data-layout]').first().getByRole('button', { name: 'Edit' }).click();
   await page.getByLabel('Layout mode').selectOption('anchored');
   await page.getByRole('button', { name: '← Layouts' }).click();
@@ -208,9 +208,37 @@ test('free mode: drag moves a table smoothly and keeps it', async ({ page }) => 
 
 test('themes: dark theme applies and layout has no horizontal overflow', async ({ page }) => {
   await createEvent(page, 'Reception', 'Default');
-  await page.getByRole('button', { name: /^Theme/ }).click();
-  await page.getByRole('button', { name: /^Theme/ }).click();
+  await openMenu(page);
+  await page.locator('#sidenav').getByRole('button', { name: /^Theme/ }).click();
+  await page.locator('#sidenav').getByRole('button', { name: /^Theme/ }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(over).toBeLessThanOrEqual(1);
+});
+
+test('side menu: collapses on desktop, opens as a drawer on phone, Esc closes', async ({ page }, info) => {
+  await createEvent(page, 'Reception', 'Default');
+  if (info.project.name === 'phone') {
+    await expect(page.locator('#sidenav')).toBeHidden();
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await expect(page.locator('#sidenav')).toBeVisible();
+    await expect(page.locator('#sidenav').getByRole('button', { name: 'Seating', exact: true })).toHaveAttribute('aria-current', 'page');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#sidenav')).toBeHidden();
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await page.locator('.backdrop').click({ position: { x: 360, y: 400 } });
+    await expect(page.locator('#sidenav')).toBeHidden();
+    await nav(page, 'Guests');
+    await expect(page.locator('#sidenav')).toBeHidden(); // closes after choosing
+    await expect(page.getByRole('heading', { name: 'Guests', level: 1 })).toBeVisible();
+  } else {
+    const w = async () => (await page.locator('#sidenav').boundingBox())!.width;
+    expect(await w()).toBeGreaterThan(200);
+    await page.getByRole('button', { name: 'Collapse menu' }).click();
+    await expect.poll(w).toBeLessThan(80);
+    await page.reload();
+    await expect.poll(w).toBeLessThan(80); // remembered
+    await page.getByRole('button', { name: 'Expand menu' }).click();
+    await expect.poll(w).toBeGreaterThan(200);
+  }
 });

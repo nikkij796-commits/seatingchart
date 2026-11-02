@@ -25,20 +25,24 @@ function Toolbar({ c }: { c: Ctx }) {
   const seated = vis.length - un.length;
   const over = c.event.plan.tables.filter((t) => seatedAt(c, t.id).length > seatsOf(c.layout, c.event.plan, t)).length;
   const events = c.project.events;
+  const [more, setMore] = useState(false);
   return (
     <>
       <div className="bar">
-        <div className="tabs" role="tablist" aria-label="Event" style={{ padding: 0 }}>
+        <div className="evtabs" role="tablist" aria-label="Event">
           {events.map((e) => (
             <button key={e.id} className="tab" role="tab" aria-selected={e.id === c.event.id} onClick={() => st.set({ eventId: e.id, selGuest: null, selTable: null, modalTable: null, query: '' })}>{e.name}</button>
           ))}
         </div>
-        <Stepper id="nTables" label="Tables" value={c.event.plan.tables.length} min={0} max={80} onChange={(n) => st.setTableCount(n)} />
-        {c.layout.mode === 'free' && <Stepper id="defCap" label="People per table" value={c.event.plan.defaultSeats} min={1} max={60} onChange={(n) => st.setDefaultSeats(n)} />}
         <button className="btn primary" id="auto" onClick={() => st.runAutoSeat()}>Auto-seat the rest</button>
         <button className="btn" onClick={() => st.set({ dialog: 'rules' })}>Rules{c.event.plan.rules.length ? ` (${c.event.plan.rules.length})` : ''}</button>
-        <button className={`btn warn${armed ? ' armed' : ''}`} id="clear" onClick={() => { if (!armed) { setArmed(true); setTimeout(() => setArmed(false), 3000); } else { setArmed(false); st.unseatAll(); } }}>{armed ? 'Click again to confirm' : 'Unseat everyone'}</button>
         <button className="btn" onClick={() => st.set({ dialog: 'export' })}>Export</button>
+        <button className="btn more-btn" aria-expanded={more} aria-controls="moreBody" onClick={() => setMore((m) => !m)}>{more ? 'Less' : 'Tables & more'}</button>
+        <div id="moreBody" className={`more-body${more ? ' open' : ''}`}>
+          <Stepper id="nTables" label="Tables" value={c.event.plan.tables.length} min={0} max={80} onChange={(n) => st.setTableCount(n)} />
+          {c.layout.mode === 'free' && <Stepper id="defCap" label="People per table" value={c.event.plan.defaultSeats} min={1} max={60} onChange={(n) => st.setDefaultSeats(n)} />}
+          <button className={`btn warn${armed ? ' armed' : ''}`} id="clear" onClick={() => { if (!armed) { setArmed(true); setTimeout(() => setArmed(false), 3000); } else { setArmed(false); st.unseatAll(); } }}>{armed ? 'Click again to confirm' : 'Unseat everyone'}</button>
+        </div>
         <span className="sp" />
         <div className="stats" id="stats">
           <span><b>{seated}</b> / {vis.length} seated</span>
