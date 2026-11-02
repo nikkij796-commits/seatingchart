@@ -31,7 +31,7 @@ export function emptyProject(): Project {
   return {
     version: 1,
     guests: [], parties: [], groups: [],
-    layouts: [instantiateTemplate('blank'), instantiateTemplate('reception'), instantiateTemplate('welcome')],
+    layouts: [instantiateTemplate('default')],
     events: [],
   };
 }

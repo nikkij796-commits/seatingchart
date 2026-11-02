@@ -17,7 +17,7 @@ npm run e2e        # Playwright, desktop + phone projects
 - **Seating list / floor plan**: party link/unlink, search, collapsible Unseated panel, over-capacity in red, group colors with spotlight and a color ring per table, details panel, double-click pop-up (button / Esc / outside click).
 - **Pending / declined**: declined and removed guests are never shown; pending are hidden by default, shown dashed with a "no RSVP" tag when toggled on, and keep their seats while hidden. Manual "treat as coming" / "remove".
 - **Free and anchored layouts**: anchored snaps to the nearest slot (slot sets the seats), replaced tables go to the Unplaced tray, dragging to the tray unplaces; unplaced tables do not count toward seats.
-- **Layout editor**: image/PDF background, add/drag/rotate/resize table spots, round / rectangle / curved shapes, walls, doors, zones, labels, duplicate, mirror, real-world scale. Starter templates for both prototype rooms (the welcome room reproduces the 10 / 7 / 4 / 4 / 5 / 6 seat pattern).
+- **Layout editor**: image/PDF background, add/drag/rotate/resize table spots, round / rectangle / curved shapes, walls, doors, zones, labels, duplicate, mirror, real-world scale. A built-in "Default" room (square, 12 round tables) or upload your own floor plan.
 - **Auto-seat** with "seat together" / "keep apart" rules; never over-fills; reports what does not fit.
 - **Export**: seating CSV, floor-plan PDF, alphabetical escort list (PDF/CSV), per-table lists, dietary summary; whole-project JSON export/import.
 - **Undo/redo** (Ctrl+Z / Ctrl+Shift+Z), keyboard alternatives for dragging (tap-select + "Seat at…", arrow keys on tables, spot picker for anchored tables), light/dark/system themes with contrast-checked group colors.

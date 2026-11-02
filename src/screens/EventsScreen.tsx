@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
+import { UploadLayoutButton } from '../components/UploadLayout';
 import { ctxFor, seatsOf, unseated, visibleGuests } from '../lib/plan';
 
 export function EventsScreen() {
@@ -31,8 +32,9 @@ export function EventsScreen() {
             </label>
           )}
           <button className="btn primary" type="submit">Create event</button>
+          <UploadLayoutButton label="Or upload my own floor plan" />
         </div>
-        <span className="hint">Each event has its own seating plan. You can upload a floor plan or edit rooms on the Layouts tab.</span>
+        <span className="hint">Each event has its own seating plan. Pick the Default room, or upload your own floor plan (then place your tables on it).</span>
       </form>
       <div className="cards" id="eventCards">
         {project.events.map((e) => {

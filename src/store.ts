@@ -7,7 +7,8 @@ import { Ctx, clonePlan, ctxFor, freeSpot, isLinked, moveSet, nextTableName, par
 import { autoSeat } from './lib/autoseat';
 import { ImportOptions, ImportSummary, applyImport } from './lib/importer';
 import { PALETTE } from './lib/contrast';
-import { instantiateTemplate } from './lib/templates';
+import { blankLayout, instantiateTemplate } from './lib/templates';
+import { fileToBackground } from './lib/background';
 import { clamp, uid } from './lib/util';
 
 export type Screen = 'events' | 'seating' | 'guests' | 'layouts' | 'editor';
@@ -78,7 +79,8 @@ interface State {
   importGuests(o: Omit<ImportOptions, 'eventId'>): ImportSummary;
   loadProject(p: Project): void;
 
-  addLayout(kind: 'blank' | 'reception' | 'welcome'): string;
+  addLayout(kind: 'blank' | 'default'): string;
+  addLayoutFromFile(file: File): Promise<string | null>;
   duplicateLayout(id: string): string;
   updateLayout(id: string, fn: (l: Draft<Layout>) => void): void;
   deleteLayout(id: string): void;
@@ -329,6 +331,14 @@ export const useStore = create<State>((set, get) => {
       const l = instantiateTemplate(kind);
       commit((d) => { d.layouts.push(l as Draft<Layout>); });
       return l.id;
+    },
+    async addLayoutFromFile(file) {
+      try {
+        const bg = await fileToBackground(file);
+        const l = { ...blankLayout(file.name.replace(/\.[^.]+$/, '') || 'My room'), ratio: bg.ratio, background: { dataUrl: bg.dataUrl, opacity: 0.6 } };
+        commit((d) => { d.layouts.push(l as Draft<Layout>); });
+        return l.id;
+      } catch { toast('Could not read that image or PDF.'); return null; }
     },
     duplicateLayout(id) {
       const nid = uid('layout');

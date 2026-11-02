@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import type { Layout } from '../types';
+import { UploadLayoutButton } from '../components/UploadLayout';
 
 export function MiniLayout({ l }: { l: Layout }) {
   return (
@@ -18,11 +19,11 @@ export function LayoutsScreen() {
     <div className="page">
       <div className="row">
         <h2 style={{ flex: 1 }}>Room layouts</h2>
-        <button className="btn primary" onClick={() => open(st.addLayout('blank'))}>New blank layout</button>
-        <button className="btn" onClick={() => open(st.addLayout('reception'))}>Add reception template</button>
-        <button className="btn" onClick={() => open(st.addLayout('welcome'))}>Add welcome dinner template</button>
+        <UploadLayoutButton label="Upload a floor plan" />
+        <button className="btn" onClick={() => open(st.addLayout('default'))}>Add a default room</button>
+        <button className="btn" onClick={() => open(st.addLayout('blank'))}>New empty layout</button>
       </div>
-      <span className="hint">Layouts are reusable across events. To start from a floor plan, create a layout and upload an image or PDF in the editor.</span>
+      <span className="hint">Layouts are reusable across events. Upload a floor-plan image or PDF, or start from the Default room (a square room with round tables), then adjust tables in the editor.</span>
       <div className="cards" id="layoutCards">
         {project.layouts.map((l) => {
           const used = project.events.filter((e) => e.layoutId === l.id);

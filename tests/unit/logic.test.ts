@@ -3,14 +3,16 @@ import { applyImport, defaultStatusMap, guessMapping, guessStatus, parseCsv } fr
 import { emptyProject, sampleCsv } from '../../src/lib/sample';
 import { autoSeat } from '../../src/lib/autoseat';
 import { ctxFor, isVisible, planFromLayout, seatsOf, unseated, visibleGuests, effectiveStatus } from '../../src/lib/plan';
-import { welcomeTemplate, receptionTemplate, WELCOME_SEATS } from '../../src/lib/templates';
+import { defaultLayout } from '../../src/lib/templates';
 import { adjustForTheme, contrast, SURFACE } from '../../src/lib/contrast';
 import { escortList } from '../../src/lib/exporters';
 import type { Project } from '../../src/types';
 
+const MIXED_SEATS = [10, 7, 4, 4, 5, 6, 10, 10, 8, 8, 6, 6];
 function setup(layoutKind: 'reception' | 'welcome' = 'reception') {
   const base = emptyProject();
-  const layout = layoutKind === 'reception' ? receptionTemplate() : welcomeTemplate();
+  const layout = defaultLayout();
+  if (layoutKind === 'welcome') { layout.mode = 'anchored'; layout.slots.forEach((sl, i) => (sl.seats = MIXED_SEATS[i])); }
   const p: Project = { ...base, layouts: [layout], events: [{ id: 'e1', name: 'Event', layoutId: layout.id, plan: planFromLayout(layout) }] };
   const sheet = parseCsv(sampleCsv());
   const mapping = guessMapping(sheet.headers);
@@ -79,18 +81,18 @@ describe('visibility', () => {
   });
 });
 
-describe('templates', () => {
-  it('welcome room reproduces the 10 / 7 / 4 / 4 / 5 / 6 seat pattern', () => {
-    const l = welcomeTemplate();
-    expect(l.mode).toBe('anchored');
-    expect(l.slots.map((s) => s.seats)).toEqual(WELCOME_SEATS);
-    const plan = planFromLayout(l);
-    expect(plan.tables.slice(9, 15).map((t) => seatsOf(l, plan, t))).toEqual([10, 7, 4, 4, 5, 6]);
-  });
-  it('reception has 23 free tables', () => {
-    const l = receptionTemplate();
+describe('default layout', () => {
+  it('is a square room with 12 round tables', () => {
+    const l = defaultLayout();
+    expect(l.ratio).toBe(1);
     expect(l.mode).toBe('free');
-    expect(l.slots.length).toBe(23);
+    expect(l.slots.length).toBe(12);
+    expect(l.slots.every((x) => x.shape === 'round' && x.seats === 10)).toBe(true);
+  });
+  it('anchored mode takes seats from the slot', () => {
+    const { project } = setup('welcome');
+    const c = ctxFor(project, 'e1')!;
+    expect(c.event.plan.tables.map((t) => seatsOf(c.layout, c.event.plan, t))).toEqual(MIXED_SEATS);
   });
 });
 
